@@ -19,7 +19,7 @@ It will take few seconds but after some time you will have NiFi running at `http
 grep -r 'Generated Username' -A 1 ./nifi/logs
 ```
 
-If you have multiple of this, please ignore everything in `./nifi/logs/.trash` because this directory holds old configs.
+If you have multiple of this, only last entrance should be used.
 
 <details>
   <summary>Directory structure of the project</summary>
@@ -36,7 +36,7 @@ If you have multiple of this, please ignore everything in `./nifi/logs/.trash` b
 
 ### Stopping Nifi 
 
-If you wish to stop your nifi instance you can simply run 
+If you wish to stop your NiFi instance you can simply run 
 ```bash 
 docker-compose down
 ```
