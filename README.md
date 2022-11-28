@@ -1,12 +1,9 @@
-## NiFi demo
+## NiFi development
 
 This repo contains NiFi demo template that you can use to test out NiFi. It's for developement purposes and it doesn't use ZooKeeper but runs standalone NiFi instance inside docker container. 
 
 Dependencies 
 - Docker
-
-Best if you run this where `bash` availible (like MacOS or Linux based systems) since `./bin/` contains scripts in `bash` 
-
 
 ### Starting NiFI
 
@@ -29,14 +26,9 @@ If you have multiple of this, please ignore everything in `./nifi/logs/.trash` b
 
   Structure 
     - `nifi` contains all the nifi related things
-      - `database_repository` is internal nifi directory that holds settings from your nifi setup
-      - `flowfile_repository` is internal nifi directory that holds flow files 
       - `keystore` is directory that holds keystore which we use to store certificates 
-        - `KeyStore.jks` has password `test123` and holds certificate to 
-          - domain 1 
-          - domain 2 
+        - `keystore.jks` has password `test123` and holds certificates
       - `logs` holds logs of nifi app that is running inside container 
-      - `.trash` backup of old configurations
     - `templates` Templates used 
     - `data` Output processed by NiFi 
 </details>
@@ -63,4 +55,61 @@ Import template to system
 Apply template 
 
 Fix Services 
+
+
+### Importing SSL certificates
+
+So if we want to enable HTTP processors - specifically GetHTTP we need to setup SSL Context Service. 
+Lets say for example we want to enable this for `www.ecb.europa.eu` first thing that you would want is download certificate for this domain. That can be done by using 
+
+```bash
+openssl s_client -connect www.ecb.europa.eu:443
+```
+
+certificate looks something like 
+
+```txt
+-----BEGIN CERTIFICATE-----
+            ...
+            ...
+-----END CERTIFICATE-----
+```
+
+To make this much easier if you want to save certificate to `nifi/keystore/certificate.cer` you can do that from browser also by visiting that url or you can manually copy/paste it.
+
+<!-- ```bash
+openssl s_client \
+    -connect www.ecb.europa.eu:443 \
+    -servername ecb.europa.eu 2>&1 \
+    | awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' > nifi/keystore/certificate.cer
+``` -->
+
+Once you have certificate set up, you can enter container that is running NiFi by using 
+
+```bash 
+docker-compose exec nifi bash 
+```
+
+Access `keystore` directory where newly created certificate should be stored, and also `keystore.jks`
+
+```bash 
+cd keystore
+```
+
+And you can run following command to import certificate 
+
+```bash 
+keytool -import -alias ecb_europa_eu -file ./certificate.cer -keystore ./keystore.jks -storepass test123
+```
+
+Then inside Nifi Flow Configuration page, under Controller Services, find your StandardSSLContextService and change following properties
+- Keystore Filename - `/opt/nifi/nifi-current/keystore/keystore.jks`
+- Keystore Password - `test123`
+- Keystore Type - `JKS`
+- Truststore Filename - `/opt/nifi/nifi-current/keystore/keystore.jks`
+- Truststore Password - `test123`
+- Truststore Type - `JKS`
+- TLS Protocol - `TLS`
+
+And save it
 

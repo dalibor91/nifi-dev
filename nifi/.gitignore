@@ -1,2 +1,4 @@
 *
+!keystore
+!keystore/*
 !.gitignore
